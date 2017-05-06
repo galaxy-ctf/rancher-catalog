@@ -1,5 +1,5 @@
 galaxy:
-  image: quay.io/erasche/gccctf2017:latest
+  image: quay.io/erasche/gccctf2017:master
   restart: always
   labels:
     io.rancher.scheduler.affinity:host_label_soft: role=compute
