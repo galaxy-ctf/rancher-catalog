@@ -2,8 +2,6 @@
   name: "CTFd"
   version: "1.0.0"
   description: "CTF Scorebaord"
-  uuid: ctfd
-  minimum_rancher_version: v1.55.0
   questions:
 
 ctfd:
