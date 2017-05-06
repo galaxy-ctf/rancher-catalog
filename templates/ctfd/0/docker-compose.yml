@@ -2,7 +2,6 @@ version: '2'
 services:
   ctfd:
     image: quay.io/galaxy-ctf/ctfd:gcc2017
-    build: .
     restart: always
     ports:
       - "8000:8000"
