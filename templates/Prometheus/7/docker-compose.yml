@@ -65,7 +65,7 @@ services:
       labels:
         io.rancher.scheduler.affinity:host_label_soft: role=stats
       volumes:
-        - grafana_data/var/lib/grafana/
+        - grafana_data:/var/lib/grafana/
   grafana:
       tty: true
       image: grafana/grafana:4.2.0
