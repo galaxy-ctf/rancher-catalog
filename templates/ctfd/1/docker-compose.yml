@@ -1,0 +1,26 @@
+version: '2'
+volumes:
+  mysql_data:
+    driver: rancher-nfs
+services:
+  ctfd:
+    image: quay.io/galaxy-ctf/ctfd:gcc2017
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: mysql+pymysql://root@db/ctfd
+      CTFD_YAML_FILE: /data.yml
+    volumes:
+      - /opt/CTFd/CTFd/logs
+    links:
+      - db:db
+    labels:
+      io.rancher.sidekicks: db
+      io.rancher.scheduler.affinity:host_label_soft: role=compute
+  db:
+    image: mysql:latest
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - mysql_data:/var/lib/mysql
