@@ -1,0 +1,16 @@
+version: '2'
+volumes:
+    ts_data:
+        driver: rancher-nfs
+services:
+    toolshed:
+        image: quay.io/erasche/gccctf2017-toolshed:latest
+    ports:
+        - "9009"
+    restart: always
+    labels:
+        io.rancher.scheduler.affinity:host_label_soft: role=compute
+    volumes:
+        - ts_data:/export/
+    environment:
+        GALAXY_CONFIG_BRAND: "Testing"
