@@ -1,0 +1,15 @@
+.catalog:
+  name: "[Galaxyians] Galaxy Toolshed"
+  version: "1.0.2"
+  description: "CTF Toolshed"
+  questions:
+
+toolshed:
+  scale: 1
+  health_check:
+    port: 80
+    interval: 5000
+    unhealthy_threshold: 3
+    request_line: ''
+    healthy_threshold: 2
+    response_timeout: 5000
