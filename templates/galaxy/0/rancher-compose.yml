@@ -1,0 +1,221 @@
+.catalog:
+  name: Galaxy
+  version: 17.05.00
+  description: Galaxy Bioinformatics Platform
+  questions:
+  - variable: FTP_PORT
+    label: FTP Port
+    default: 21
+    required: false
+    type: integer
+  - variable: SFTP_PORT
+    label: SFTP Port
+    default: 22
+    required: false
+    type: integer
+  - variable: FTP_PASSIVE_LOW
+    label: FTP Passive Port Range Low
+    default: 30000
+    required: false
+    type: integer
+  - variable: FTP_PASSIVE_HIGH
+    label: FTP Passive Port Range High
+    default: 30100
+    required: false
+    type: integer
+  - variable: VOLUME_DRIVER
+    label: Docker driver to store volume or base path for each disks
+    label: Volume drver / Path
+    type: string
+    required: true
+    default: local
+  - variable: POSTGRES_PASSWORD
+    label: Database Password
+    type: password
+    description: Password used for securing access to Postgres
+    required: true
+  - variable: PGADMIN_PORT
+    label: PgAdmin4 Port
+    default: 5050
+    required: true
+    type: integer
+  - variable: JOB_RUNNER
+    label: Job Runner
+    description: Which cluster type would you like to use for running jobs
+    required: true
+    type: enum
+    default: slurm
+    options:
+    - slurm
+    - condor
+
+  - variable: HTCONDOR_A_CPUS
+    label: "[HTCondor] Job runner type A CPUs"
+    description: How many CPUs should be allocated per flavour A container.
+    type: integer
+    default: 2
+  - variable: HTCONDOR_A_MEM
+    label: "[HTCondor] Job runner type A Memory"
+    description: How much memory should be allocated per flavour A container. In MB.
+    type: integer
+    default: 2048
+  - variable: HTCONDOR_B_CPUS
+    label: "[HTCondor] Job runner type B CPUs"
+    description: How many CPUs should be allocated per flavour B container.
+    type: integer
+    default: 2
+  - variable: HTCONDOR_B_MEM
+    label: "[HTCondor] Job runner type B Memory"
+    description: How much memory should be allocated per flavour B container. In MB.
+    type: integer
+    default: 2048
+  - variable: HTCONDOR_C_CPUS
+    label: "[HTCondor] Job runner type C CPUs"
+    description: How many CPUs should be allocated per flavour C container.
+    type: integer
+    default: 2
+  - variable: HTCONDOR_C_MEM
+    label: "[HTCondor] Job runner type C Memory"
+    description: How much memory should be allocated per flavour C container. In MB.
+    type: integer
+    default: 2048
+
+  - variable: RABBITMQ_PASSWORD
+    label: RabbitMQ Password
+    type: password
+    description: Password used for securing access to rabbitmq
+    required: true
+
+
+  - variable: GALAXY_DEFAULT_ADMIN_USER
+    label: Galaxy Default Admin User Email
+    type: string
+    description: Email address for the default admin user
+    required: true
+    default: admin@galaxy.org
+  - variable: GALAXY_DEFAULT_ADMIN_PASSWORD
+    label: Galaxy Default Admin User Password
+    type: password
+    required: true
+  - variable: GALAXY_DEFAULT_ADMIN_KEY
+    label: Galaxy Default Admin User API Key
+    type: string
+    description: API Key
+    required: true
+    default: admin
+  - variable: GALAXY_HANDLER_NUMPROCS
+    label: Galaxy Handler Process Count
+    type: integer
+    required: true
+    default: 2
+  - variable: UWSGI_PROCESSES
+    label: Uwsgi Processes
+    type: integer
+    required: true
+    default: 4
+  - variable: GALAXY_CONFIG_ALLOW_USER_DATASET_PURGE
+    label: Allow user dataset purge
+    required: true
+    type: enum
+    default: True
+    options:
+    - True
+    - False
+  - variable: GALAXY_CONFIG_ALLOW_LIBRARY_PATH_PASTE
+    label: Allow user pasting of library paths
+    required: true
+    type: enum
+    default: True
+    options:
+    - True
+    - False
+
+  - variable: GALAXY_CONFIG_ENABLE_USER_DELETION
+    label: Enable deletion of users
+    required: true
+    type: enum
+    default: True
+    options:
+    - True
+    - False
+
+  - variable: GALAXY_CONFIG_ENABLE_BETA_WORKFLOW_MODULES
+    label: "[Beta] Enable workflow modules"
+    required: true
+    type: enum
+    default: True
+    options:
+    - True
+    - False
+
+  - variable: GALAXY_DOCKER_ENABLED
+    label: Enable Galaxy to access Docker
+    required: true
+    type: enum
+    default: True
+    options:
+    - True
+    - False
+  - variable: GALAXY_CONFIG_CLEANUP_JOB
+    label: Job cleanup behaviour
+    required: true
+    type: enum
+    default: onsuccess
+    options:
+    - always
+    - onsuccess
+    - never
+  - variable: GALAXY_PORT
+    label: External port for Galaxy access
+    required: true
+    type: integer
+    default: 8080
+  - variable: GALAXY_PROXY_PASS
+    label: Path/subdirectory to run Galaxy under
+    required: true
+    type: string
+    default: "/"
+
+galaxy-proftpd:
+  scale: 1
+  health_check:
+    port: 21
+    request_line: ''
+    interval: 5000
+    unhealthy_threshold: 3
+    healthy_threshold: 2
+    response_timeout: 5000
+galaxy-postgres:
+  scale: 1
+  health_check:
+    port: 5432
+    request_line: ''
+    interval: 5000
+    unhealthy_threshold: 3
+    healthy_threshold: 2
+    response_timeout: 5000
+pgadmin4:
+  scale: 1
+  health_check:
+    port: 5050
+    request_line: ''
+    interval: 5000
+    unhealthy_threshold: 3
+    healthy_threshold: 2
+    response_timeout: 5000
+galaxy-web:
+  scale: 1
+  health_check:
+    port: 80
+    request_line: "GET / HTTP/1.0"
+    interval: 5000
+    unhealthy_threshold: 3
+    healthy_threshold: 2
+    response_timeout: 5000
+
+galaxy-htcondor-executor-a:
+  scale: 1
+galaxy-htcondor-executor-b:
+  scale: 1
+galaxy-htcondor-executor-c:
+  scale: 1

@@ -1,0 +1,194 @@
+version: '2'
+volumes:
+    {{- if not (contains .Values.VOLUME_DRIVER "/")}}
+    export_data:
+        driver: ${VOLUME_DRIVER}
+    postgres_data:
+        driver: ${VOLUME_DRIVER}
+    rabbitmq_data:
+        driver: ${VOLUME_DRIVER}
+    {{- end}}
+
+services:
+  # proftpd container
+  galaxy-proftpd:
+    # build: galaxy-proftpd
+    image: quay.io/galaxy/proftpd
+    environment:
+        - proftpd_db_connection=galaxy@galaxy-postgres
+        - proftpd_db_username=galaxy
+        - proftpd_db_password=${POSTGRES_PASSWORD}
+        - proftpd_files_dir=/export
+        - proftpd_use_sftp=True
+        - proftpd_generate_ssh_key=False
+        - proftpd_passive_port_low=${FTP_PASSIVE_LOW}
+        - proftpd_passive_port_high=${FTP_PASSIVE_HIGH}
+    links:
+        - galaxy-postgres
+    volumes_from:
+        - galaxy-web
+    ports:
+        - "8021:21"
+        - "8022:22"
+        - ${FTP_PASSIVE_LOW}-${FTP_PASSIVE_HIGH}:${FTP_PASSIVE_LOW}-${FTP_PASSIVE_HIGH}
+    restart: always
+
+  galaxy-postgres:
+    # If you are using the official postgres image, it needs to be populated by calling
+    # docker-compose run galaxy install_db.sh
+    # on first run
+    # image: postgres
+    # build: galaxy-postgres
+    image: quay.io/galaxy/postgres
+    environment:
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_USER: galaxy
+        POSTGRES_DB: galaxy
+    volumes:
+        {{- if contains .Values.VOLUME_DRIVER "/" }}
+        - {{.Values.VOLUME_DRIVER}}/postgres:/var/lib/postgresql/data
+        {{- else}}
+        - postgres_data:/var/lib/postgresql/data
+        {{- end}}
+
+  # PostgreSQL admin suite
+  pgadmin4:
+    image: thajeztah/pgadmin4
+    ports:
+        - ${PGADMIN_PORT}:5050
+    links:
+        - galaxy-postgres
+    restart: unless-stopped
+
+  # SLURM container - this is your compute cluster :)
+  {{- if contains .Values.JOB_RUNNER "slurm" }}
+  galaxy-slurm:
+    # build: galaxy-slurm
+    image: quay.io/galaxy/slurm
+    volumes_from:
+        - galaxy-web
+    restart: unless-stopped
+  {{- else }}
+  galaxy-htcondor:
+    image: quay.io/bgruening/galaxy-htcondor
+    volumes_from:
+        - galaxy-web
+    restart: unless-stopped
+
+  galaxy-htcondor-executor-a:
+    image: quay.io/bgruening/galaxy-htcondor-executor
+    # privileged is needed to run Docker jobs, moreover HTCondor wants
+    # a RW cgroups mount. A RO cgroups mount throws an error in ProcD for running jobs.
+    privileged: True
+    environment:
+        CONDOR_HOST: galaxy-htcondor
+        CONDOR_CPUS: ${HTCONDOR_A_CPUS}
+        CONDOR_MEMORY: ${HTCONDOR_A_MEM}
+    volumes_from:
+        - galaxy-web
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  galaxy-htcondor-executor-b:
+    image: quay.io/bgruening/galaxy-htcondor-executor
+    # privileged is needed to run Docker jobs, moreover HTCondor wants
+    # a RW cgroups mount. A RO cgroups mount throws an error in ProcD for running jobs.
+    privileged: True
+    environment:
+        CONDOR_HOST: galaxy-htcondor
+        CONDOR_CPUS: ${HTCONDOR_B_CPUS}
+        CONDOR_MEMORY: ${HTCONDOR_B_MEM}
+    volumes_from:
+        - galaxy-web
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  galaxy-htcondor-executor-c:
+    image: quay.io/bgruening/galaxy-htcondor-executor
+    # privileged is needed to run Docker jobs, moreover HTCondor wants
+    # a RW cgroups mount. A RO cgroups mount throws an error in ProcD for running jobs.
+    privileged: True
+    environment:
+        CONDOR_HOST: galaxy-htcondor
+        CONDOR_CPUS: ${HTCONDOR_C_CPUS}
+        CONDOR_MEMORY: ${HTCONDOR_C_MEM}
+    volumes_from:
+        - galaxy-web
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+  {{- end }}
+
+  # This container initializes the galaxy export.
+  galaxy-init:
+    # build: galaxy-init
+    image: quay.io/bgruening/galaxy-init
+    volumes:
+        {{- if contains .Values.VOLUME_DRIVER "/" }}
+        - {{.Values.VOLUME_DRIVER}}/export/:/export/
+        {{- else}}
+        - export_data:/export/
+        {{- end}}
+
+  # Message queue for better performance
+  rabbitmq:
+    image: rabbitmq:alpine
+    container_name: galaxy-rabbitmq
+    hostname: rabbitmq
+    environment:
+        RABBITMQ_DEFAULT_USER: galaxy
+        RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+        RABBITMQ_DEFAULT_VHOST: galaxy
+    volumes:
+        {{- if contains .Values.VOLUME_DRIVER "/" }}
+        - {{.Values.VOLUME_DRIVER}}/rabbitmq/:/var/lib/rabbitmq/
+        {{- else}}
+        - rabbitmq_data:/var/lib/rabbitmq/
+        {{- end}}
+
+  # This container provides the galaxy uwsgi webhandlers, job handlers, nginx
+  galaxy-web:
+    # build: galaxy-web
+    image: quay.io/bgruening/galaxy-web
+    environment:
+        # In case the galaxy-init container is not used, you need to include "sleeplock" to NONUSE
+        NONUSE: proftpd,postgres,slurmd,slurmctld
+        GALAXY_DEFAULT_ADMIN_USER: ${GALAXY_DEFAULT_ADMIN_USER}
+        GALAXY_DEFAULT_ADMIN_PASSWORD: ${GALAXY_DEFAULT_ADMIN_PASSWORD}
+        GALAXY_DEFAULT_ADMIN_KEY: ${GALAXY_DEFAULT_ADMIN_KEY}
+        GALAXY_HANDLER_NUMPROCS: ${GALAXY_HANDLER_NUMPROCS}
+        UWSGI_PROCESSES: ${UWSGI_PROCESSES}
+        GALAXY_CONFIG_ALLOW_USER_DATASET_PURGE: ${GALAXY_CONFIG_ALLOW_USER_DATASET_PURGE}
+        GALAXY_CONFIG_ALLOW_LIBRARY_PATH_PASTE: ${GALAXY_CONFIG_ALLOW_LIBRARY_PATH_PASTE}
+        GALAXY_CONFIG_ENABLE_USER_DELETION: ${GALAXY_CONFIG_ENABLE_USER_DELETION}
+        GALAXY_CONFIG_ENABLE_BETA_WORKFLOW_MODULES: ${GALAXY_CONFIG_ENABLE_BETA_WORKFLOW_MODULES}
+        GALAXY_CONFIG_DATABASE_CONNECTION=postgresql://galaxy:${POSTGRES_PASSWORD}@galaxy-postgres/galaxy?client_encoding: utf8
+        # Configurate admin and master api key. Can be overridden in galaxy.ini
+        GALAXY_CONFIG_AMQP_INTERNAL_CONNECTION: amqp://galaxy:${RABBITMQ_PASSWORD}@rabbitmq/galaxy
+        # Condor
+        {{- if contains .Values.JOB_RUNNER "slurm" }}
+        GALAXY_DESTINATIONS_DEFAULT: slurm_cluster
+        {{- else }}
+        GALAXY_DESTINATIONS_DEFAULT: condor_cluster
+        ENABLE_CONDOR: true
+        CONDOR_HOST: galaxy-htcondor
+        GALAXY_CONDOR_UNIVERSE: vanilla
+        {{- end }}
+
+        GALAXY_DOCKER_ENABLED: ${GALAXY_DOCKER_ENABLED}
+        GALAXY_CONFIG_CLEANUP_JOB: ${GALAXY_CONFIG_CLEANUP_JOB}
+    hostname: galaxy
+    privileged: True
+    ports:
+        - "${GALAXY_PORT}:80" # nginx
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        # This is the directory where all your files from Galaxy will be stored
+        # on your host system
+        {{- if contains .Values.VOLUME_DRIVER "/" }}
+        - {{.Values.VOLUME_DRIVER}}/export/:/export/
+        {{- else}}
+        - export_data:/export/
+        {{- end}}
