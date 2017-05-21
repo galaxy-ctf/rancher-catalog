@@ -1,0 +1,23 @@
+version: '2'
+volumes:
+  db_data:
+    driver: rancher-nfs
+  db_backup_data:
+    driver: rancher-nfs
+
+services:
+    postgres:
+        image: postgres:9.5
+        volumes:
+            - db:/var/lib/postgresql/data
+        environment:
+            POSTGRES_PASSWORD: postgres
+
+    app:
+        image: quay.io/galaxy-ctf/milkyway
+        links:
+            - postgres:db
+        environment:
+            DB_HOSTNAME: postgres.ctf
+        labels:
+            io.rancher.container.pull_image: always

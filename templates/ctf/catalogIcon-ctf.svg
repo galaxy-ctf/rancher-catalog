@@ -14,7 +14,7 @@
    preserveAspectRatio="xMidYMid"
    id="svg2"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="catalogIcon-ctfd.svg">
+   sodipodi:docname="catalogIcon-ctf.svg">
   <metadata
      id="metadata12">
     <rdf:RDF>
@@ -38,22 +38,27 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="862"
-     inkscape:window-height="766"
+     inkscape:window-width="1366"
+     inkscape:window-height="768"
      id="namedview8"
      showgrid="false"
-     inkscape:zoom="0.91828794"
-     inkscape:cx="128"
-     inkscape:cy="128.5"
-     inkscape:window-x="21"
+     inkscape:zoom="1.8365759"
+     inkscape:cx="117.88266"
+     inkscape:cy="109.07552"
+     inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg2" />
-  <rect
-     style="opacity:1;fill:#b3b3b3;fill-opacity:1;stroke:#000000;stroke-width:1.51100004;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     id="rect4226"
-     width="158.99153"
-     height="106.72034"
-     x="59.89407"
-     y="78.406776" />
+  <path
+     sodipodi:type="spiral"
+     style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="path4135"
+     sodipodi:cx="124.14406"
+     sodipodi:cy="141.02332"
+     sodipodi:expansion="1"
+     sodipodi:revolution="1.5"
+     sodipodi:radius="126.16821"
+     sodipodi:argument="-9.9792604"
+     sodipodi:t0="0.1166"
+     d="m 111.55988,133.40372 c -3.32337,-16.92847 17.63806,-25.48528 31.09514,-22.95226 26.84793,5.05358 37.74653,36.17694 30.04857,59.97418 -11.79637,36.46692 -55.03592,50.41869 -88.853213,37.14488 C 37.711227,189.4602 20.610131,133.57478 39.609172,89.838272 63.871243,33.986075 132.60795,13.704184 186.22046,38.500753 c 17.69028,8.18201 33.24298,20.709099 45.18841,36.09457" />
 </svg>
