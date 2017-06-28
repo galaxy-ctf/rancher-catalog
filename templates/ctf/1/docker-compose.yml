@@ -1,0 +1,39 @@
+version: '2'
+volumes:
+  db_data:
+    driver: rancher-nfs
+  db_backup_data:
+    driver: rancher-nfs
+
+services:
+    postgres:
+        image: postgres:9.5
+        volumes:
+            - db_data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_PASSWORD: postgres
+
+    app:
+        image: quay.io/galaxy-ctf/milkyway
+        links:
+            - postgres:db
+        environment:
+            DB_HOSTNAME: postgres.ctf
+        labels:
+            io.rancher.container.pull_image: always
+
+    dbbackup:
+        image: quay.io/tamu_cpt/postgres-backup:latest
+        environment:
+          MAX_BACKUPS: 5
+          PGHOST: db
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        links:
+          - postgres:db
+        volumes:
+          - db_backup_data:/backup
+        labels:
+          io.rancher.container.pull_image: always
+          io.rancher.scheduler.affinity:host_label: role=compute
